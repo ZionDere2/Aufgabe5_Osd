@@ -18,7 +18,18 @@ _Benutzen Sie keine Schleifen - Die Aufgabe soll über Rekursion gelöst werden!
 
 */
 Canvas recursive_line(Canvas c, int x, int y, int width) {
-    return c;
+    if (width <= 0) {
+        return c;
+    }
+
+    int canvas_w = canvas_width(c);
+    int canvas_h = canvas_height(c);
+
+    if (y >= 0 && y < canvas_h && x >= 0 && x < canvas_w) {
+        canvas_set_black(c, x, y);
+    }
+
+    return recursive_line(c, x + 1, y, width - 1);
 }
 
 /*
@@ -29,7 +40,13 @@ Wenn Teile des Rechtecks außerhalb der Canvas liegen, dann sollen diese Teile i
 _Benutzen Sie keine Schleifen, die Aufgabe soll über Rekursion gelöst werden!_
 */
 Canvas recursive_rectangle(Canvas c, int x, int y, int width, int height) {
-    return c;
+    if (height <= 0) {
+        return c;
+    }
+
+    recursive_line(c, x, y, width);
+
+    return recursive_rectangle(c, x, y + 1, width, height - 1);
 }
 
 /*
@@ -43,7 +60,11 @@ Die Fibonaccizahlen sind wie folgt definiert:
 Berechne die `n`-te Fibonaccizahl.
 */
 int fibonacci(int n) {
-    return 0;
+    if (n <= 1) {
+        return 1;
+    }
+
+    return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
 /*
@@ -55,6 +76,44 @@ zu vier direkte Nachbarn - die Diagonalen zählen nicht.
 
 Funktionen, um die Farbe eines Pixels auf der Canvas zu bestimmen, sind im Headerfile der Canvas dokumentiert.
 */
-Canvas bucket_fill(Canvas c, int x, int y) {
+static Canvas bucket_fill_recursive(Canvas c, int x, int y, int width, int height, int target_black) {
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return c;
+    }
+
+    if (target_black) {
+        if (!pixel_is_black(c, x, y)) {
+            return c;
+        }
+        c = canvas_set_white(c, x, y);
+    } else {
+        if (!pixel_is_white(c, x, y)) {
+            return c;
+        }
+        c = canvas_set_black(c, x, y);
+    }
+
+    c = bucket_fill_recursive(c, x + 1, y, width, height, target_black);
+    c = bucket_fill_recursive(c, x - 1, y, width, height, target_black);
+    c = bucket_fill_recursive(c, x, y + 1, width, height, target_black);
+    c = bucket_fill_recursive(c, x, y - 1, width, height, target_black);
+
+    if (target_black) {
+        c = canvas_set_black(c, x, y);
+    }
+
     return c;
+}
+
+Canvas bucket_fill(Canvas c, int x, int y) {
+    int width = canvas_width(c);
+    int height = canvas_height(c);
+
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+        return c;
+    }
+
+    int target_black = pixel_is_black(c, x, y);
+
+    return bucket_fill_recursive(c, x, y, width, height, target_black);
 }
